@@ -39,7 +39,7 @@ function eventmotion(c, btn, x, y)
                        0.0, 0.0)
 end
 
-const ModType = Gtk.GConstants.GdkModifierType
+const ModType = Gtk4.Gdk4.Constants.ModifierType
 mask(btn) =
     btn == 1 ? ModType.GDK_BUTTON1_MASK :
     btn == 2 ? ModType.GDK_BUTTON2_MASK :

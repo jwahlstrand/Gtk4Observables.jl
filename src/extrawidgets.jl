@@ -46,14 +46,14 @@ frame(p::PlayerWithTextbox) = p.frame
 function PlayerWithTextbox(builder, index::Observable{Int}, range::UnitRange{Int}, id::Int=1)
     1 <= id <= 2 || error("only 2 player widgets are defined in player.glade")
     direction = Observable(Int8(0))
-    frame = Gtk.G_.object(builder,"player_frame$id")::Gtk.GtkFrameLeaf
-    scale = slider(range; widget=Gtk.G_.object(builder,"index_scale$id")::Gtk.GtkScaleLeaf, observable=index)
-    entry = textbox(first(range); widget=Gtk.G_.object(builder,"index_entry$id")::Gtk.GtkEntryLeaf, observable=index, range=range)
-    play_back = button(; widget=Gtk.G_.object(builder,"play_back$id")::Gtk.GtkButtonLeaf)
-    step_back = button(; widget=Gtk.G_.object(builder,"step_back$id")::Gtk.GtkButtonLeaf)
-    stop = button(; widget=Gtk.G_.object(builder,"stop$id")::Gtk.GtkButtonLeaf)
-    step_forward = button(; widget=Gtk.G_.object(builder,"step_forward$id")::Gtk.GtkButtonLeaf)
-    play_forward = button(; widget=Gtk.G_.object(builder,"play_forward$id")::Gtk.GtkButtonLeaf)
+    frame = Gtk4.G_.get_object(builder,"player_frame$id")::Gtk4.GtkFrame
+    scale = slider(range; widget=Gtk4.G_.get_object(builder,"index_scale$id")::Gtk4.GtkScale, observable=index)
+    entry = textbox(first(range); widget=Gtk4.G_.get_object(builder,"index_entry$id")::Gtk4.GtkEntry, observable=index, range=range)
+    play_back = button(; widget=Gtk4.G_.get_object(builder,"play_back$id")::Gtk4.GtkButton)
+    step_back = button(; widget=Gtk4.G_.get_object(builder,"step_back$id")::Gtk4.GtkButton)
+    stop = button(; widget=Gtk4.G_.get_object(builder,"stop$id")::Gtk4.GtkButton)
+    step_forward = button(; widget=Gtk4.G_.get_object(builder,"step_forward$id")::Gtk4.GtkButton)
+    play_forward = button(; widget=Gtk4.G_.get_object(builder,"play_forward$id")::Gtk4.GtkButton)
 
     # Fix up widget properties
     set_gtk_property!(scale.widget, "round-digits", 0)  # glade/gtkbuilder bug that I have to set this here?
@@ -123,10 +123,10 @@ function player(cs::Observable, range::AbstractUnitRange{<:Integer}; style="with
     error("style $style not recognized")
 end
 
-Base.unsafe_convert(::Type{Ptr{Gtk.GLib.GObject}}, p::PlayerWithTextbox) =
-    Base.unsafe_convert(Ptr{Gtk.GLib.GObject}, frame(p))
+Base.unsafe_convert(::Type{Ptr{Gtk4.GLib.GObject}}, p::PlayerWithTextbox) =
+    Base.unsafe_convert(Ptr{Gtk4.GLib.GObject}, frame(p))
 
-Gtk.destroy(p::PlayerWithTextbox) = destroy(frame(p))
+Gtk4.destroy(p::PlayerWithTextbox) = destroy(frame(p))
 
 
 ################# A time widget ##########################
@@ -140,11 +140,11 @@ end
     timewidget(time)
 
 Return a time widget that includes the `Time` and a `GtkFrame` with the hour, minute, and
-second widgets in it. You can specify the specific `GtkFrame` widget (useful when using the `Gtk.Builder` and `glade`). Time is guaranteed to be positive.
+second widgets in it. You can specify the specific `GtkFrame` widget (useful when using the `Gtk4.Builder` and `glade`). Time is guaranteed to be positive.
 """
 function timewidget(t1::Dates.Time; widget=nothing, observable=nothing)
     zerotime = Dates.Time(0,0,0) # convenient since we'll use it frequently
-    b = Gtk.GtkBuilder(filename=joinpath(@__DIR__, "time.glade"))
+    b = Gtk4.GtkBuilder(filename=joinpath(@__DIR__, "time.glade"))
     if observable === nothing
         observable = Observable(t1) # this is the input observable, we can push! into it to update the widget
     end
@@ -214,11 +214,11 @@ end
 Return a datetime widget that includes the `DateTime` and a `GtkBox` with the
 year, month, day, hour, minute, and second widgets in it. You can specify the
 specific `SpinButton` widgets for the hour, minute, and second (useful when using
-`Gtk.Builder` and `glade`). Date and time are guaranteed to be positive.
+`Gtk4.Builder` and `glade`). Date and time are guaranteed to be positive.
 """
 function datetimewidget(t1::DateTime; widget=nothing, observable=nothing)
     zerotime = DateTime(0,1,1,0,0,0)
-    b = Gtk.GtkBuilder(filename=joinpath(@__DIR__, "datetime.glade"))
+    b = Gtk4.GtkBuilder(filename=joinpath(@__DIR__, "datetime.glade"))
     # the same logic is applied here as for `timewidget`
     if observable == nothing
         observable = Observable(t1)

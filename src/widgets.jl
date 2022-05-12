@@ -2,14 +2,12 @@
 
 """
     init_wobsval([T], observable, value; default=nothing) -> observable, value
-
 Return a suitable initial state for `observable` and `value` for a
 widget. Any but one of these argument can be `nothing`. A new `observable`
 will be created if the input `observable` is `nothing`. Passing in a
 pre-existing `observable` will return the same observable, either setting the
 observable to `value` (if specified as an input) or extracting and
 returning its current value (if the `value` input is `nothing`).
-
 Optionally specify the element type `T`; if `observable` is a
 `Observables.Observable`, then `T` must agree with `eltype(observable)`.
 """
@@ -36,12 +34,10 @@ end
 """
     init_observable2widget(widget::GtkWidget, id, observable) -> updatesignal
     init_observable2widget(getter, setter, widget::GtkWidget, id, observable) -> updatesignal
-
 Update the "display" value of the Gtk widget `widget` whenever `observable`
 changes. `id` is the observable handler id for updating `observable` from the
 widget, and is required to prevent the widget from responding to the
 update by firing `observable`.
-
 If `updatesignal` is garbage-collected, the widget will no longer
 update. Most likely you should either `preserve` or store
 `updatesignal`.
@@ -69,12 +65,11 @@ end
 init_observable2widget(widget::GtkWidget, id, observable) =
     init_observable2widget(defaultgetter, defaultsetter!, widget, id, observable)
 
-defaultgetter(widget) = Gtk.G_.value(widget)
-defaultsetter!(widget,val) = Gtk.G_.value(widget, val)
+defaultgetter(widget) = Gtk4.G_.get_value(widget)
+defaultsetter!(widget,val) = Gtk4.G_.set_value(widget, val)
 
 """
     ondestroy(widget::GtkWidget, preserved)
-
 Create a `destroy` callback for `widget` that terminates updating dependent signals.
 """
 function ondestroy(widget::GtkWidget, preserved::AbstractVector)
@@ -88,7 +83,7 @@ end
 
 struct Slider{T<:Number} <: InputWidget{T}
     observable::Observable{T}
-    widget::GtkScaleLeaf
+    widget::GtkScale
     id::Culong
     preserved::Vector{Any}
 
@@ -98,19 +93,18 @@ struct Slider{T<:Number} <: InputWidget{T}
         obj
     end
 end
-Slider(observable::Observable{T}, widget::GtkScaleLeaf, id, preserved) where {T} =
+Slider(observable::Observable{T}, widget::GtkScale, id, preserved) where {T} =
     Slider{T}(observable, widget, id, preserved)
 
 medianidx(r) = (ax = axes(r)[1]; return (first(ax)+last(ax))÷2)
 # differs from median(r) in that it always returns an element of the range
 medianelement(r::AbstractRange) = r[medianidx(r)]
 
-slider(observable::Observable, widget::GtkScaleLeaf, id, preserved = []) =
+slider(observable::Observable, widget::GtkScale, id, preserved = []) =
     Slider(observable, widget, id, preserved)
 
 """
     slider(range; widget=nothing, value=nothing, observable=nothing, orientation="horizontal")
-
 Create a slider widget with the specified `range`. Optionally provide:
   - the GtkScale `widget` (by default, creates a new one)
   - the starting `value` (defaults to the median of `range`)
@@ -130,20 +124,20 @@ function slider(range::AbstractRange{T};
         own = observable != obsin
     end
     if widget === nothing
-        widget = GtkScale(lowercase(first(orientation)) == 'v',
+        widget = GtkScale(:h,
                           first(range), last(range), step(range))
-        Gtk.G_.size_request(widget, 200, -1)
+        Gtk4.G_.set_size_request(widget, 200, -1)
     else
-        adj = Gtk.Adjustment(widget)
-        Gtk.G_.lower(adj, first(range))
-        Gtk.G_.upper(adj, last(range))
-        Gtk.G_.step_increment(adj, step(range))
+        adj = Gtk4.GtkAdjustment(widget)
+        Gtk4.G_.set_lower(adj, first(range))
+        Gtk4.G_.set_upper(adj, last(range))
+        Gtk4.G_.set_step_increment(adj, step(range))
     end
-    Gtk.G_.value(widget, value)
+    Gtk4.G_.set_value(widget, value)
 
     ## widget -> observable
     id = signal_connect(widget, "value_changed") do w
-        observable[] = defaultgetter(w)
+        observable[] = round(T,defaultgetter(w))
     end
 
     ## observable -> widget
@@ -162,11 +156,11 @@ end
 # Is calling this `setindex!` too much of a pun?
 function Base.setindex!(s::Slider, (range,value)::Tuple{AbstractRange, Any})
     first(range) <= value <= last(range) || error("$value is not within the span of $range")
-    adj = Gtk.Adjustment(widget(s))
-    Gtk.G_.lower(adj, first(range))
-    Gtk.G_.upper(adj, last(range))
-    Gtk.G_.step_increment(adj, step(range))
-    Gtk.G_.value(widget(s), value)
+    adj = Gtk4.GtkAdjustment(widget(s))
+    Gtk4.G_.set_lower(adj, first(range))
+    Gtk4.G_.set_upper(adj, last(range))
+    Gtk4.G_.set_step_increment(adj, step(range))
+    Gtk4.G_.set_value(widget(s), value)
 end
 Base.setindex!(s::Slider, range::AbstractRange) = setindex!(s, (range, s[]))
 
@@ -174,7 +168,7 @@ Base.setindex!(s::Slider, range::AbstractRange) = setindex!(s, (range, s[]))
 
 struct Checkbox <: InputWidget{Bool}
     observable::Observable{Bool}
-    widget::GtkCheckButtonLeaf
+    widget::GtkCheckButton
     id::Culong
     preserved::Vector{Any}
 
@@ -185,12 +179,11 @@ struct Checkbox <: InputWidget{Bool}
     end
 end
 
-checkbox(observable::Observable, widget::GtkCheckButtonLeaf, id, preserved=[]) =
+checkbox(observable::Observable, widget::GtkCheckButton, id, preserved=[]) =
     Checkbox(observable, widget, id, preserved)
 
 """
     checkbox(value=false; widget=nothing, observable=nothing, label="")
-
 Provide a checkbox with the specified starting (boolean)
 `value`. Optionally provide:
   - a GtkCheckButton `widget` (by default, creates a new one)
@@ -206,14 +199,14 @@ function checkbox(value::Bool; widget=nothing, observable=nothing, label="", own
     if widget === nothing
         widget = GtkCheckButton(label)
     end
-    Gtk.G_.active(widget, value)
+    Gtk4.G_.set_active(widget, value)
 
-    id = signal_connect(widget, "clicked") do w
-        observable[] = Gtk.G_.active(w)
+    id = signal_connect(widget, "toggled") do w
+        observable[] = Gtk4.G_.get_active(w)
     end
     preserved = []
-    push!(preserved, init_observable2widget(w->Gtk.G_.active(w),
-                                            (w,val)->Gtk.G_.active(w, val),
+    push!(preserved, init_observable2widget(w->Gtk4.G_.get_active(w),
+                                            (w,val)->Gtk4.G_.set_active(w, val),
                                             widget, id, observable))
     if own
         ondestroy(widget, preserved)
@@ -228,7 +221,7 @@ checkbox(; value=false, widget=nothing, observable=nothing, label="", own=nothin
 
 struct ToggleButton <: InputWidget{Bool}
     observable::Observable{Bool}
-    widget::GtkToggleButtonLeaf
+    widget::GtkToggleButton
     id::Culong
     preserved::Vector{Any}
 
@@ -239,12 +232,11 @@ struct ToggleButton <: InputWidget{Bool}
     end
 end
 
-togglebutton(observable::Observable, widget::GtkToggleButtonLeaf, id, preserved=[]) =
+togglebutton(observable::Observable, widget::GtkToggleButton, id, preserved=[]) =
     ToggleButton(observable, widget, id, preserved)
 
 """
     togglebutton(value=false; widget=nothing, observable=nothing, label="")
-
 Provide a togglebutton with the specified starting (boolean)
 `value`. Optionally provide:
   - a GtkCheckButton `widget` (by default, creates a new one)
@@ -260,14 +252,14 @@ function togglebutton(value::Bool; widget=nothing, observable=nothing, label="",
     if widget === nothing
         widget = GtkToggleButton(label)
     end
-    Gtk.G_.active(widget, value)
+    Gtk4.G_.set_active(widget, value)
 
-    id = signal_connect(widget, "clicked") do w
-        setindex!(observable, Gtk.G_.active(w))
+    id = signal_connect(widget, "toggled") do w
+    setindex!(observable, Gtk4.G_.active(w))
     end
     preserved = []
-    push!(preserved, init_observable2widget(w->Gtk.G_.active(w),
-                                        (w,val)->Gtk.G_.active(w, val),
+    push!(preserved, init_observable2widget(w->Gtk4.G_.get_active(w),
+                                        (w,val)->Gtk4.G_.set_active(w, val),
                                         widget, id, observable))
     if own
         ondestroy(widget, preserved)
@@ -282,7 +274,7 @@ togglebutton(; value=false, widget=nothing, observable=nothing, label="", own=no
 
 struct Button <: InputWidget{Nothing}
     observable::Observable{Nothing}
-    widget::Union{GtkButtonLeaf,GtkToolButtonLeaf}
+    widget::GtkButton
     id::Culong
 
     function Button(observable::Observable{Nothing}, widget, id)
@@ -292,22 +284,21 @@ struct Button <: InputWidget{Nothing}
     end
 end
 
-button(observable::Observable, widget::Union{GtkButtonLeaf,GtkToolButtonLeaf}, id) =
+button(observable::Observable, widget::GtkButton, id) =
     Button(observable, widget, id)
 
 """
-    button(label; widget=nothing, observable=nothing)
-    button(; label=nothing, widget=nothing, observable=nothing)
-
+button(label; widget=nothing, observable=nothing)
+button(; label=nothing, widget=nothing, observable=nothing)
 Create a push button with text-label `label`. Optionally provide:
-  - a GtkButton `widget` (by default, creates a new one)
-  - the (Observables.jl) `observable` coupled to this button (by default, creates a new observable)
+- a GtkButton `widget` (by default, creates a new one)
+- the (Observables.jl) `observable` coupled to this button (by default, creates a new observable)
 """
 function button(;
-                label::Union{Nothing,String,Symbol}=nothing,
-                widget=nothing,
-                observable=nothing,
-                own=nothing)
+    label::Union{Nothing,String,Symbol}=nothing,
+    widget=nothing,
+    observable=nothing,
+    own=nothing)
     obsin = observable
     if observable === nothing
         observable = Observable(nothing)
@@ -332,7 +323,7 @@ button(label::Union{String,Symbol}; widget=nothing, observable=nothing, own=noth
 
 struct ColorButton{C} <: InputWidget{Nothing}
     observable::Observable{C}
-    widget::GtkColorButtonLeaf
+    widget::GtkColorButton
     id::Culong
     preserved::Vector{Any}
 
@@ -343,34 +334,33 @@ struct ColorButton{C} <: InputWidget{Nothing}
     end
 end
 
-colorbutton(observable::Observable{C}, widget::GtkColorButtonLeaf, id, preserved = []) where {T, C <: Color{T, 3}} =
-    ColorButton{C}(observable, widget, id, preserved)
+colorbutton(observable::Observable{C}, widget::GtkColorButton, id, preserved = []) where {T, C <: Color{T, 3}} =
+ColorButton{C}(observable, widget, id, preserved)
 
-Base.convert(::Type{RGBA}, gcolor::Gtk.GdkRGBA) = RGBA(gcolor.r, gcolor.g, gcolor.b, gcolor.a)
-Base.convert(::Type{Gtk.GdkRGBA}, color::Colorant) = Gtk.GdkRGBA(red(color), green(color), blue(color), alpha(color))
+Base.convert(::Type{RGBA}, gcolor::Gtk4.Gdk4.GdkRGBA) = RGBA(gcolor.r, gcolor.g, gcolor.b, gcolor.a)
+Base.convert(::Type{Gtk4.Gdk4.GdkRGBA}, color::Colorant) = Gtk4.Gdk4.GdkRGBA(red(color), green(color), blue(color), alpha(color))
 
 """
-    colorbutton(color; widget=nothing, observable=nothing)
-    colorbutton(; color=nothing, widget=nothing, observable=nothing)
-
+colorbutton(color; widget=nothing, observable=nothing)
+colorbutton(; color=nothing, widget=nothing, observable=nothing)
 Create a push button with color `color`. Clicking opens the Gtk color picker. Optionally provide:
-  - a GtkColorButton `widget` (by default, creates a new one)
-  - the (Observables.jl) `observable` coupled to this button (by default, creates a new observable)
+- a GtkColorButton `widget` (by default, creates a new one)
+- the (Observables.jl) `observable` coupled to this button (by default, creates a new observable)
 """
 function colorbutton(;
-                color::C = RGB(0, 0, 0),
-                widget=nothing,
-                observable=nothing,
-                own=nothing) where {T, C <: Color{T, 3}}
+    color::C = RGB(0, 0, 0),
+    widget=nothing,
+    observable=nothing,
+    own=nothing) where {T, C <: Color{T, 3}}
     obsin = observable
     observable, color = init_wobsval(observable, color)
     if own === nothing
         own = observable != obsin
     end
-    getcolor(w) = get_gtk_property(w, :rgba, Gtk.GdkRGBA)
-    setcolor!(w, val) = set_gtk_property!(w, :rgba, convert(Gtk.GdkRGBA, val))
+    getcolor(w) = get_gtk_property(w, :rgba, Gtk4.Gdk4.GdkRGBA)
+    setcolor!(w, val) = set_gtk_property!(w, :rgba, convert(Gtk4.Gdk4.GdkRGBA, val))
     if widget === nothing
-        widget = GtkColorButton(convert(Gtk.GdkRGBA, color))
+        widget = GtkColorButton(convert(Gtk4.Gdk4.GdkRGBA, color))
     else
         setcolor!(widget, color)
     end
@@ -393,7 +383,7 @@ colorbutton(color::Color{T, 3}; widget=nothing, observable=nothing, own=nothing)
 
 struct Textbox{T} <: InputWidget{T}
     observable::Observable{T}
-    widget::GtkEntryLeaf
+    widget::GtkEntry
     id::Culong
     preserved::Vector{Any}
     range
@@ -404,16 +394,15 @@ struct Textbox{T} <: InputWidget{T}
         obj
     end
 end
-Textbox(observable::Observable{T}, widget::GtkEntryLeaf, id, preserved, range) where {T} =
+Textbox(observable::Observable{T}, widget::GtkEntry, id, preserved, range) where {T} =
     Textbox{T}(observable, widget, id, preserved, range)
 
-textbox(observable::Observable, widget::GtkButtonLeaf, id, preserved = []) =
+textbox(observable::Observable, widget::GtkButton, id, preserved = []) =
     Textbox(observable, widget, id, preserved)
 
 """
     textbox(value=""; widget=nothing, observable=nothing, range=nothing, gtksignal=:activate)
     textbox(T::Type; widget=nothing, observable=nothing, range=nothing, gtksignal=:activate)
-
 Create a box for entering text. `value` is the starting value; if you
 don't want to provide an initial value, you can constrain the type
 with `T`. Optionally specify the allowed range (e.g., `-10:10`)
@@ -499,12 +488,11 @@ end
 
 entrysetter!(w, val) = set_gtk_property!(w, "text", string(val))
 
-
 ######################### Textarea ###########################
 
 struct Textarea <: InputWidget{String}
     observable::Observable{String}
-    widget::GtkTextViewLeaf
+    widget::GtkTextView
     id::Culong
     preserved::Vector{Any}
 
@@ -517,7 +505,6 @@ end
 
 """
     textarea(value=""; widget=nothing, observable=nothing)
-
 Creates an extended text-entry area. Optionally provide a GtkTextView `widget`
 and/or the (Observables.jl) `observable` associated with this widget. The
 `observable` updates when you type.
@@ -564,7 +551,7 @@ end
 struct Dropdown <: InputWidget{String}
     observable::Union{Observable{String}, Observable{Union{Nothing, String}}} # consider removing support for Observable{String} in next breaking release
     mappedsignal::Observable{Any}
-    widget::GtkComboBoxTextLeaf
+    widget::GtkComboBoxText
     str2int::Dict{String,Int}
     id::Culong
     preserved::Vector{Any}
@@ -578,31 +565,23 @@ end
 
 """
     dropdown(choices; widget=nothing, value=first(choices), observable=nothing, label="", with_entry=true, icons, tooltips)
-
 Create a "dropdown" widget. `choices` can be a vector (or other iterable) of
 options. These options might either be a list of strings, or a list of `choice::String => func` pairs
 so that an action encoded by `func` can be taken when `choice` is selected.
-
 Optionally specify
   - the GtkComboBoxText `widget` (by default, creates a new one)
   - the starting `value`
   - the (Observables.jl) `observable` coupled to this slider (by default, creates a new observable)
   - whether the widget should allow text entry
-
 # Examples
-
     dd = dropdown(["one", "two", "three"])
-
 To link a callback to the dropdown, use
-
     dd = dropdown(("turn red"=>colorize_red, "turn green"=>colorize_green))
     on(dd.mappedsignal) do cb
         cb(img)                     # img is external data you want to act on
     end
-
 `cb` does not fire for the initial value of `dd`; if this is desired, manually execute
 `dd[] = dd[]` after defining this action.
-
 `dd.mappedsignal` is a function-observable only for the pairs syntax for `choices`.
 """
 function dropdown(; choices=nothing,
@@ -630,7 +609,7 @@ function dropdown(; choices=nothing,
     allstrings = all(x->isa(x, AbstractString), choices)
     allstrings || all(x->isa(x, Pair), choices) || throw(ArgumentError("all elements must either be strings or pairs, got $choices"))
     str2int = Dict{String,Int}()
-    getactive(w) = (val = GAccessor.active_text(w); val == C_NULL ? nothing : Gtk.bytestring(val))
+    getactive(w) = Gtk4.G_.get_active_text(w)
     setactive!(w, val) = (i = val !== nothing ? str2int[val] : -1; set_gtk_property!(w, :active, i))
     if length(choices) > 0
         if value === nothing || (observable isa Observable{String} && value ∉ juststring.(choices))
@@ -707,7 +686,6 @@ juststring(p::Pair{String}) = p.first
 pairaction(str::AbstractString) = x->nothing
 pairaction(p::Pair{String,F}) where {F<:Function} = p.second
 
-
 # """
 # radiobuttons: see the help for `dropdown`
 # """
@@ -779,7 +757,7 @@ pairaction(p::Pair{String,F}) where {F<:Function} = p.second
 
 struct Label <: Widget
     observable::Observable{String}
-    widget::GtkLabelLeaf
+    widget::GtkLabel
     preserved::Vector{Any}
 
     function Label(observable::Observable{String}, widget, preserved)
@@ -791,7 +769,6 @@ end
 
 """
     label(value; widget=nothing, observable=nothing)
-
 Create a text label displaying `value` as a string. Optionally specify
   - the GtkLabel `widget` (by default, creates a new one)
   - the (Observables.jl) `observable` coupled to this label (by default, creates a new observable)
@@ -897,7 +874,7 @@ end
 
 struct SpinButton{T<:Number} <: InputWidget{T}
     observable::Observable{T}
-    widget::GtkSpinButtonLeaf
+    widget::GtkSpinButton
     id::Culong
     preserved::Vector{Any}
 
@@ -907,15 +884,14 @@ struct SpinButton{T<:Number} <: InputWidget{T}
         obj
     end
 end
-SpinButton(observable::Observable{T}, widget::GtkSpinButtonLeaf, id, preserved) where {T} =
+SpinButton(observable::Observable{T}, widget::GtkSpinButton, id, preserved) where {T} =
     SpinButton{T}(observable, widget, id, preserved)
 
-spinbutton(observable::Observable, widget::GtkSpinButtonLeaf, id, preserved = []) =
+spinbutton(observable::Observable, widget::GtkSpinButton, id, preserved = []) =
     SpinButton(observable, widget, id, preserved)
 
 """
     spinbutton(range; widget=nothing, value=nothing, observable=nothing, orientation="horizontal")
-
 Create a spinbutton widget with the specified `range`. Optionally provide:
   - the GtkSpinButton `widget` (by default, creates a new one)
   - the starting `value` (defaults to the start of `range`)
@@ -937,18 +913,18 @@ function spinbutton(range::AbstractRange{T};
     if widget === nothing
         widget = GtkSpinButton(
                           first(range), last(range), step(range))
-        Gtk.G_.size_request(widget, 200, -1)
+        Gtk4.G_.set_size_request(widget, 200, -1)
     else
-        adj = Gtk.Adjustment(widget)
-        Gtk.G_.lower(adj, first(range))
-        Gtk.G_.upper(adj, last(range))
-        Gtk.G_.step_increment(adj, step(range))
+        adj = Gtk4.GtkAdjustment(widget)
+        Gtk4.G_.set_lower(adj, first(range))
+        Gtk4.G_.set_upper(adj, last(range))
+        Gtk4.G_.set_step_increment(adj, step(range))
     end
     if lowercase(first(orientation)) == 'v'
-        Gtk.G_.orientation(Gtk.GtkOrientable(widget),
-                           Gtk.GConstants.GtkOrientation.VERTICAL)
+        Gtk4.G_.set_orientation(Gtk4.GtkOrientable(widget),
+                           Gtk4.Constants.Orientation_VERTICAL)
     end
-    Gtk.G_.value(widget, value)
+    Gtk4.G_.set_value(widget, value)
 
     ## widget -> observable
     id = signal_connect(widget, "value_changed") do w
@@ -971,11 +947,11 @@ end
 # Is calling this `setindex!` too much of a pun?
 function Base.setindex!(s::SpinButton, (range,value)::Tuple{AbstractRange,Any})
     first(range) <= value <= last(range) || error("$value is not within the span of $range")
-    adj = Gtk.Adjustment(widget(s))
-    Gtk.G_.lower(adj, first(range))
-    Gtk.G_.upper(adj, last(range))
-    Gtk.G_.step_increment(adj, step(range))
-    Gtk.G_.value(widget(s), value)
+    adj = Gtk4.GtkAdjustment(widget(s))
+    Gtk4.G_.set_lower(adj, first(range))
+    Gtk4.G_.set_upper(adj, last(range))
+    Gtk4.G_.set_step_increment(adj, step(range))
+    Gtk4.G_.set_value(widget(s), value)
 end
 Base.setindex!(s::SpinButton, range::AbstractRange) = setindex!(s, (range, s[]))
 
@@ -983,7 +959,7 @@ Base.setindex!(s::SpinButton, range::AbstractRange) = setindex!(s, (range, s[]))
 
 struct CyclicSpinButton{T<:Number} <: InputWidget{T}
     observable::Observable{T}
-    widget::GtkSpinButtonLeaf
+    widget::GtkSpinButton
     id::Culong
     preserved::Vector{Any}
 
@@ -993,15 +969,14 @@ struct CyclicSpinButton{T<:Number} <: InputWidget{T}
         obj
     end
 end
-CyclicSpinButton(observable::Observable{T}, widget::GtkSpinButtonLeaf, id, preserved) where {T} =
+CyclicSpinButton(observable::Observable{T}, widget::GtkSpinButton, id, preserved) where {T} =
     CyclicSpinButton{T}(observable, widget, id, preserved)
 
-cyclicspinbutton(observable::Observable, widget::GtkSpinButtonLeaf, id, preserved = []) =
+cyclicspinbutton(observable::Observable, widget::GtkSpinButton, id, preserved = []) =
     CyclicSpinButton(observable, widget, id, preserved)
 
 """
     cyclicspinbutton(range, carry_up; widget=nothing, value=nothing, observable=nothing, orientation="horizontal")
-
 Create a cyclicspinbutton widget with the specified `range` that updates a `carry_up::Observable{Bool}`
 only when a value outside the `range` of the cyclicspinbutton is pushed. `carry_up`
 is updated with `true` when the cyclicspinbutton is updated with a value that is
@@ -1026,18 +1001,18 @@ function cyclicspinbutton(range::AbstractRange{T}, carry_up::Observable{Bool};
     end
     if widget === nothing
         widget = GtkSpinButton(first(range) - step(range), last(range) + step(range), step(range))
-        Gtk.G_.size_request(widget, 200, -1)
+        Gtk4.G_.set_size_request(widget, 200, -1)
     else
-        adj = Gtk.Adjustment(widget)
-        Gtk.G_.lower(adj, first(range) - step(range))
-        Gtk.G_.upper(adj, last(range) + step(range))
-        Gtk.G_.step_increment(adj, step(range))
+        adj = Gtk4.GtkAdjustment(widget)
+        Gtk4.G_.set_lower(adj, first(range) - step(range))
+        Gtk4.G_.set_upper(adj, last(range) + step(range))
+        Gtk4.G_.set_step_increment(adj, step(range))
     end
     if lowercase(first(orientation)) == 'v'
-        Gtk.G_.orientation(Gtk.GtkOrientable(widget),
-                           Gtk.GConstants.GtkOrientation.VERTICAL)
+        Gtk4.G_.set_orientation(Gtk4.GtkOrientable(widget),
+                           Gtk4.Constants.Orientation_VERTICAL)
     end
-    Gtk.G_.value(widget, value)
+    Gtk4.G_.set_value(widget, value)
 
     ## widget -> observable
     id = signal_connect(widget, "value_changed") do w
@@ -1074,7 +1049,7 @@ end
 
 struct ProgressBar{T <: Number} <: Widget
     observable::Observable{T}
-    widget::GtkProgressBarLeaf
+    widget::GtkProgressBar
     preserved::Vector{Any}
 
     function ProgressBar{T}(observable::Observable{T}, widget, preserved) where T
@@ -1083,7 +1058,7 @@ struct ProgressBar{T <: Number} <: Widget
         obj
     end
 end
-ProgressBar(observable::Observable{T}, widget::GtkProgressBarLeaf, preserved) where {T} =
+ProgressBar(observable::Observable{T}, widget::GtkProgressBar, preserved) where {T} =
     ProgressBar{T}(observable, widget, preserved)
 
 # convert a member of the interval into a decimal
@@ -1091,28 +1066,20 @@ interval2fraction(x::AbstractInterval, i) = (i - minimum(x))/IntervalSets.width(
 
 """
     progressbar(interval::AbstractInterval; widget=nothing, observable=nothing)
-
 Create a progressbar displaying the current state in the given interval. Optionally specify
   - the GtkProgressBar `widget` (by default, creates a new one)
   - the (Observables.jl) `observable` coupled to this progressbar (by default, creates a new observable)
-
 # Examples
-
 ```julia-repl
 julia> using GtkObservables
-
 julia> using IntervalSets
-
 julia> n = 10
-
 julia> pb = progressbar(1..n)
 Gtk.GtkProgressBarLeaf with 1: "input" = 1 Int64
-
 julia> for i = 1:n
            # do something
            pb[] = i
        end
-
 ```
 """
 function progressbar(interval::AbstractInterval{T};
