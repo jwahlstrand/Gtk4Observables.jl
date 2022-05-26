@@ -922,7 +922,7 @@ function spinbutton(range::AbstractRange{T};
     end
     if lowercase(first(orientation)) == 'v'
         Gtk4.G_.set_orientation(Gtk4.GtkOrientable(widget),
-                           Gtk4.Constants.Orientation_VERTICAL)
+                           Gtk4.Orientation_VERTICAL)
     end
     Gtk4.G_.set_value(widget, value)
 
@@ -1010,7 +1010,7 @@ function cyclicspinbutton(range::AbstractRange{T}, carry_up::Observable{Bool};
     end
     if lowercase(first(orientation)) == 'v'
         Gtk4.G_.set_orientation(Gtk4.GtkOrientable(widget),
-                           Gtk4.Constants.Orientation_VERTICAL)
+                           Gtk4.Orientation_VERTICAL)
     end
     Gtk4.G_.set_value(widget, value)
 

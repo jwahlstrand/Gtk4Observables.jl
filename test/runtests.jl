@@ -198,7 +198,7 @@ include("tools.jl")
     @test s[] == 3
 
     s = spinbutton(0:59, orientation="vertical")
-    @test G_.get_orientation(GtkOrientable(widget(s))) == Gtk4.Constants.Orientation_VERTICAL
+    @test G_.get_orientation(GtkOrientable(widget(s))) == Gtk4.Orientation_VERTICAL
 
     # Updating the limits of the spinbutton
     s = spinbutton(1:15)
@@ -229,7 +229,7 @@ include("tools.jl")
     @test b[] == 1
 
     s = cyclicspinbutton(0:59, carry_up, orientation="vertical")
-    @test G_.get_orientation(GtkOrientable(widget(s))) == Gtk4.Constants.Orientation_VERTICAL
+    @test G_.get_orientation(GtkOrientable(widget(s))) == Gtk4.Orientation_VERTICAL
     sleep(0.1)
 
     # timewidget
