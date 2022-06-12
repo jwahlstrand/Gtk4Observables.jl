@@ -44,7 +44,7 @@ end
 frame(p::PlayerWithTextbox) = p.frame
 
 function PlayerWithTextbox(builder, index::Observable{Int}, range::UnitRange{Int}, id::Int=1)
-    1 <= id <= 2 || error("only 2 player widgets are defined in player.glade")
+    1 <= id <= 2 || error("only 2 player widgets are defined in player.ui")
     direction = Observable(Int8(0))
     frame = Gtk4.G_.get_object(builder,"player_frame$id")::Gtk4.GtkFrame
     scale = slider(range; widget=Gtk4.G_.get_object(builder,"index_scale$id")::Gtk4.GtkScale, observable=index)
@@ -96,7 +96,7 @@ function PlayerWithTextbox(builder, index::Observable{Int}, range::UnitRange{Int
     PlayerWithTextbox(range, direction, frame, scale, entry, play_back, step_back, stop, step_forward, play_forward), preserved
 end
 function PlayerWithTextbox(index::Observable{Int}, range::AbstractUnitRange{<:Integer}, id::Integer=1)
-    builder = GtkBuilder(filename=joinpath(splitdir(@__FILE__)[1], "player.glade"))
+    builder = GtkBuilder(filename=joinpath(splitdir(@__FILE__)[1], "player.ui"))
     PlayerWithTextbox(builder, index, convert(UnitRange{Int}, range), convert(Int, id))
 end
 

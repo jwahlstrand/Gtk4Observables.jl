@@ -46,7 +46,7 @@ include("tools.jl")
     check[] = true
     @test check[]
     @test Gtk4.G_.get_active(check.widget)
-    destroy(w)
+    Gtk4.destroy(w)
     sleep(0.1)  # work around https://github.com/JuliaGraphics/Gtk.jl/issues/391#issuecomment-1107840526
 
     ## togglebutton
@@ -58,7 +58,7 @@ include("tools.jl")
     tgl[] = true
     @test tgl[]
     @test Gtk4.G_.get_active(tgl.widget)
-    destroy(w)
+    Gtk4.destroy(w)
     sleep(0.1)
 
     ## colorbutton
@@ -68,7 +68,7 @@ include("tools.jl")
     @test cb[] == RGB(1, 0, 1)
     cb[] = RGB(0, 1, 0)
     @test cb[] == RGB(0, 1, 0)
-    destroy(w)
+    Gtk4.destroy(w)
     sleep(0.1)
 
     ## textbox (aka Entry)
@@ -106,7 +106,7 @@ include("tools.jl")
     #Gtk4.activate(widget(lost_focus))
     #@test get_gtk_property(lost_focus, "text", String) == "Something!"
     #@test lost_focus[] == "Something!"
-    destroy(win)
+    Gtk4.destroy(win)
     sleep(0.1)
 
     ## textarea (aka TextView)
@@ -115,7 +115,7 @@ include("tools.jl")
     @test v[] == "Type something longer"
     v[] = "ok"
     @test get_gtk_property(Gtk4.G_.get_buffer(v.widget), "text", String) == "ok"
-    destroy(win)
+    Gtk4.destroy(win)
     sleep(0.1)
 
     ## slider
@@ -289,34 +289,35 @@ const counter = Ref(0)
     # else
     #     @test_broken counter[] == cc+1
     # end
-    destroy(w)
+    Gtk4.destroy(w)
 end
 
-# To support GtkBuilder, we need this as the minimum libgtk version
-# @testset "Compound widgets" begin
-#     ## player widget
-#     s = Observable(1)
-#     p = player(s, 1:8)
-#     win = GtkWindow("Compound", 400, 100) |> (g = Grid())
-#     g[1,1] = p
-#     btn_fwd = p.widget.step_forward
-#     @test s[] == 1
-#     btn_fwd[] = nothing
-#     @test s[] == 2
-#     p.widget.play_forward[] = nothing
-#     for i = 1:7
-#         sleep(0.1)
-#     end
-#     @test s[] == 8
-#     @test string(p) == "GtkObservables.PlayerWithTextbox with Observable{Int64} with 2 listeners. Value:\n8"
-#     destroy(win)
-#
-#     p = player(1:1000)
-#     win = GtkWindow("Compound 2", 400, 100)
-#     push!(win, frame(p))
-#     widget(p).direction[] = 1
-#     destroy(win)  # this should not generate a lot of output
-# end
+@testset "Compound widgets" begin
+    ## player widget
+    s = Observable(1)
+    p = player(s, 1:8)
+    win = GtkWindow("Compound", 400, 100)
+    g = GtkGrid()
+    win[]=g
+    g[1,1] = frame(p)
+    btn_fwd = p.widget.step_forward
+    @test s[] == 1
+    btn_fwd[] = nothing
+    @test s[] == 2
+    p.widget.play_forward[] = nothing
+    for i = 1:7
+        sleep(0.1)
+    end
+    @test s[] == 8
+    @test string(p) == "GtkObservables.PlayerWithTextbox with Observable{Int64} with 2 listeners. Value:\n8"
+    Gtk4.destroy(win)
+
+    p = player(1:1000)
+    win = GtkWindow("Compound 2", 400, 100)
+    push!(win, frame(p))
+    widget(p).direction[] = 1
+    Gtk4.destroy(win)  # this should not generate a lot of output
+end
 
 @testset "CairoUnits" begin
     x = UserUnit(0.2)
@@ -361,7 +362,7 @@ end
     can_test_width && @test Graphics.width(c) == 208
     @test Graphics.height(c) == 207
     @test isa(c, GtkObservables.Canvas{DeviceUnit})
-    destroy(win)
+    Gtk4.destroy(win)
     c = canvas(UserUnit, 208, 207)
     win = GtkWindow(c)
     reveal(c)
@@ -386,7 +387,7 @@ end
         end
     end
 
-    destroy(win)
+    Gtk4.destroy(win)
 
 
     c = canvas()
@@ -482,7 +483,7 @@ end
         @test imgout[25,100] == imgout[16,100] == imgout[20,105] == colorant"red"
         @test imgout[20,100] == img[20,100]
     end
-    destroy(win)
+    Gtk4.destroy(win)
 end
 
 # For testing ZoomRegion support for non-AbstractArray objects
@@ -656,7 +657,7 @@ end
         surf = GtkObservables.image_surface(fill(val, 3, 5))
         @test surf.height == 3 && surf.width == 5
         @test all(x->x == reinterpret(UInt32, cmp), surf.data)
-        destroy(surf)
+        Cairo.destroy(surf)
     end
 end
 
