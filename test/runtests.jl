@@ -433,21 +433,30 @@ end
     # destroy(win)
 end
 
-# @testset "Popup" begin
-#     popupmenu = Menu()
-#     popupitem = MenuItem("Popup menu...")
-#     push!(popupmenu, popupitem)
-#     win = Window() |> (c = canvas())
-#     popuptriggered = Ref(false)
-#     push!(c.preserved, map(c.mouse.buttonpress) do btn
-#         if btn.button == 3 && btn.clicktype == BUTTON_PRESS
-#             popup(popupmenu, btn.gtkevent)  # use the raw Gtk event
-#             popuptriggered[] = true
-#             nothing
-#         end
-#     end)
-#     yield()
-#     @test !popuptriggered[]
+@testset "Popup" begin
+    popupmenu = GMenu()
+    popupitem = GMenuItem("Popup menu...")
+    push!(popupmenu, popupitem)
+    popover = GtkPopoverMenu(popupmenu)
+    win = GtkWindow()
+    c = canvas()
+    Gtk4.G_.set_parent(popover, widget(c))
+    win[] = widget(c)
+    popuptriggered = Ref(false)
+    push!(c.preserved, map(c.mouse.buttonpress) do btn
+        @async println(btn.button)
+        if btn.button == 3 && btn.clicktype == BUTTON_PRESS
+            pos = Gtk4.Gdk4._GdkRectangle(round(Int32,btn.position.x.val),round(Int32,btn.position.y.val),1,1)
+            Gtk4.G_.set_pointing_to(popover, Ref(pos))
+            Gtk4.G_.popup(popover)
+            popuptriggered[] = true
+            nothing
+        end
+    end)
+    yield()
+    @test !popuptriggered[]
+#     FIXME: Haven't figured out how to do this in GTK4
+#
 #     evt = eventbutton(c, BUTTON_PRESS, 1)
 #     signal_emit(widget(c), "button-press-event", Bool, evt)
 #     yield()
@@ -455,9 +464,8 @@ end
 #     evt = eventbutton(c, BUTTON_PRESS, 3)
 #     signal_emit(widget(c), "button-press-event", Bool, evt)
 #     @test popuptriggered[]
-#     destroy(win)
-#     destroy(popupmenu)
-# end
+    destroy(win)
+end
 
 @testset "Drawing" begin
     img = testimage("lighthouse")
