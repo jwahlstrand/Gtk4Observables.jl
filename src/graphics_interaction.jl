@@ -248,7 +248,7 @@ struct MouseHandler{U<:CairoUnit}
         push!(ids, signal_connect(mousemove_cb, gm, "motion"))
 
         function mousescroll_cb(ec::GtkEventControllerScroll, dx::Float64, dy::Float64)
-            handler.scroll[] = MouseScroll{U}(ec, dx > 0 ? Gdk4.ScrollDirection_UP : Gdk4.ScrollDirection_DOWN)
+            handler.scroll[] = MouseScroll{U}(ec, dx > 0 ? Gtk4.Gdk4.ScrollDirection_UP : Gtk4.Gdk4.ScrollDirection_DOWN)
             nothing
         end
         push!(ids, signal_connect(mousescroll_cb, gs, "scroll"))

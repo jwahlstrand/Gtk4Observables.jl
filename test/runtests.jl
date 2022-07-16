@@ -280,15 +280,11 @@ const counter = Ref(0)
         counter[] += 1
     end
     cc = counter[]  # map seems to fire it once, so record the "new" initial value
-    click(b::GtkObservables.Button) = ccall((:gtk_widget_activate,Gtk4.libgtk4),Cint,(Ptr{Gtk4.GLib.GObject},),b.widget)
+    click(b::GtkObservables.Button) = activate(b.widget)
     GC.gc(true)
     ret = click(b)
     @test ret==true
-    # if VERSION >= v"1.2.0"
-    #     @test counter[] == cc+1
-    # else
-    #     @test_broken counter[] == cc+1
-    # end
+    #@test counter[] == cc+1
     Gtk4.destroy(w)
 end
 
@@ -412,30 +408,33 @@ end
     motion  = map(btn->lastevent[] = string("motion to ", btn.position.x, ", ", btn.position.y),
                   c.mouse.motion)
     scroll  = map(btn->lastevent[] = "scroll", c.mouse.scroll)
-    # lastevent[] = "nothing"
-    # @test lastevent[] == "nothing"
-    # signal_emit(widget(c), "button-press-event", Bool, eventbutton(c, BUTTON_PRESS, 1))
-    # sleep(0.1)
-    # # FIXME: would prefer that this works on all Julia versions
-    # VERSION >= v"1.2.0" && @test lastevent[] == "press"
-    # signal_emit(widget(c), "button-release-event", Bool, eventbutton(c, GtkObservables.BUTTON_RELEASE, 1))
-    # sleep(0.1)
-    # sleep(0.1)
-    # VERSION >= v"1.2.0" && @test lastevent[] == "release"
-    # signal_emit(widget(c), "scroll-event", Bool, eventscroll(c, UP))
-    # sleep(0.1)
-    # sleep(0.1)
-    # VERSION >= v"1.2.0" && @test lastevent[] == "scroll"
-    # signal_emit(widget(c), "motion-notify-event", Bool, eventmotion(c, 0, UserUnit(20), UserUnit(15)))
-    # sleep(0.1)
-    # sleep(0.1)
-    # VERSION >= v"1.2.0" && @test lastevent[] == "motion to UserUnit(20.0), UserUnit(15.0)"
-    # destroy(win)
+    lastevent[] = "nothing"
+    @test lastevent[] == "nothing"
+    ec = Gtk4.find_controller(widget(c), GtkGestureClick)
+    signal_emit(ec, "pressed", Nothing, Int32(1), 0.0, 0.0)
+    sleep(0.1)
+    @test lastevent[] == "press"
+    signal_emit(ec, "released", Nothing, Int32(1), 0.0, 0.0)
+    sleep(0.1)
+    sleep(0.1)
+    @test lastevent[] == "release"
+    # Scroll test doesn't work -- GdkEvent doesn't exist for simulated scroll?
+    #ec = Gtk4.find_controller(widget(c), GtkEventControllerScroll)
+    #signal_emit(ec, "scroll", Bool, 1.0, 0.0)
+    #sleep(0.1)
+    #sleep(0.1)
+    #@test lastevent[] == "scroll"
+    ec = Gtk4.find_controller(widget(c), GtkEventControllerMotion)
+    signal_emit(ec, "motion", Nothing, UserUnit(20).val, UserUnit(15).val)
+    sleep(0.1)
+    sleep(0.1)
+    @test lastevent[] == "motion to UserUnit(20.0), UserUnit(15.0)"
+    Gtk4.destroy(win)
 end
 
 @testset "Popup" begin
-    popupmenu = GMenu()
-    popupitem = GMenuItem("Popup menu...")
+    popupmenu = Gtk4.GLib.GMenu()
+    popupitem = Gtk4.GLib.GMenuItem("Popup menu...")
     push!(popupmenu, popupitem)
     popover = GtkPopoverMenu(popupmenu)
     win = GtkWindow()
@@ -464,7 +463,7 @@ end
 #     evt = eventbutton(c, BUTTON_PRESS, 3)
 #     signal_emit(widget(c), "button-press-event", Bool, evt)
 #     @test popuptriggered[]
-    destroy(win)
+    Gtk4.destroy(win)
 end
 
 @testset "Drawing" begin
