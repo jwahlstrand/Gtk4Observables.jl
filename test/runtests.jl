@@ -445,7 +445,7 @@ end
     push!(c.preserved, map(c.mouse.buttonpress) do btn
         @async println(btn.button)
         if btn.button == 3 && btn.clicktype == BUTTON_PRESS
-            pos = Gtk4.Gdk4._GdkRectangle(round(Int32,btn.position.x.val),round(Int32,btn.position.y.val),1,1)
+            pos = Gtk4._GdkRectangle(round(Int32,btn.position.x.val),round(Int32,btn.position.y.val),1,1)
             Gtk4.G_.set_pointing_to(popover, Ref(pos))
             Gtk4.G_.popup(popover)
             popuptriggered[] = true
@@ -605,7 +605,10 @@ end
     sleep(0.1)
 
     # Zoom by rubber band
-    # signal_emit(widget(c), "button-press-event", Bool,
+    # need to simulate control modifier
+    #ec = Gtk4.find_controller(widget(c), GtkGestureClick)
+    #signal_emit(ec, "pressed", Nothing, Int32(1), UserUnit(5).val, UserUnit(3).val)
+    #signal_emit(ec, "pressed", Bool,
     #             eventbutton(c, BUTTON_PRESS, 1, UserUnit(5), UserUnit(3), CONTROL))
     # signal_emit(widget(c), "motion-notify-event", Bool,
     #             eventmotion(c, mask(1), UserUnit(10), UserUnit(4)))

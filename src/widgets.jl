@@ -160,7 +160,7 @@ function Base.setindex!(s::Slider, (range,value)::Tuple{AbstractRange, Any})
     Gtk4.G_.set_lower(adj, first(range))
     Gtk4.G_.set_upper(adj, last(range))
     Gtk4.G_.set_step_increment(adj, step(range))
-    Gtk4.@sigatom Gtk4.G_.set_value(widget(s), value)
+    Gtk4.@idle_add Gtk4.G_.set_value(widget(s), value)
 end
 Base.setindex!(s::Slider, range::AbstractRange) = setindex!(s, (range, s[]))
 
@@ -337,8 +337,8 @@ end
 colorbutton(observable::Observable{C}, widget::GtkColorButton, id, preserved = []) where {T, C <: Color{T, 3}} =
 ColorButton{C}(observable, widget, id, preserved)
 
-Base.convert(::Type{RGBA}, gcolor::Gtk4.Gdk4.GdkRGBA) = RGBA(gcolor.r, gcolor.g, gcolor.b, gcolor.a)
-Base.convert(::Type{Gtk4.Gdk4.GdkRGBA}, color::Colorant) = Gtk4.Gdk4.GdkRGBA(red(color), green(color), blue(color), alpha(color))
+Base.convert(::Type{RGBA}, gcolor::Gtk4.GdkRGBA) = RGBA(gcolor.r, gcolor.g, gcolor.b, gcolor.a)
+Base.convert(::Type{Gtk4.GdkRGBA}, color::Colorant) = Gtk4.GdkRGBA(red(color), green(color), blue(color), alpha(color))
 
 """
 colorbutton(color; widget=nothing, observable=nothing)
@@ -357,10 +357,10 @@ function colorbutton(;
     if own === nothing
         own = observable != obsin
     end
-    getcolor(w) = get_gtk_property(w, :rgba, Gtk4.Gdk4.GdkRGBA)
-    setcolor!(w, val) = set_gtk_property!(w, :rgba, convert(Gtk4.Gdk4.GdkRGBA, val))
+    getcolor(w) = get_gtk_property(w, :rgba, Gtk4.GdkRGBA)
+    setcolor!(w, val) = set_gtk_property!(w, :rgba, convert(Gtk4.GdkRGBA, val))
     if widget === nothing
-        widget = GtkColorButton(convert(Gtk4.Gdk4.GdkRGBA, color))
+        widget = GtkColorButton(convert(Gtk4.GdkRGBA, color))
     else
         setcolor!(widget, color)
     end

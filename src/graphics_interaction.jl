@@ -150,14 +150,14 @@ end
 function MouseButton{U}(e::GtkEventController, n_press::Integer, x::Float64, y::Float64, clicktype) where U
     modifiers = Gtk4.G_.get_current_event_state(e)
     button = 0
-    if modifiers != 0 && (modifiers & Gtk4.Gdk4.ModifierType_BUTTON1_MASK == Gtk4.Gdk4.ModifierType_BUTTON1_MASK)
+    if modifiers != 0 && (modifiers & Gtk4.ModifierType_BUTTON1_MASK == Gtk4.ModifierType_BUTTON1_MASK)
         button = 1
     end
     w = widget(e)
     MouseButton{U}(XY{U}(w, x, y), button, clicktype, UInt32(modifiers), n_press, nothing)
 end
 function MouseButton{U}() where U
-    MouseButton(XY(U(-1), U(-1)), UInt32(0), Gtk4.Gdk4.EventType(0), UInt32(0), 1, nothing)
+    MouseButton(XY(U(-1), U(-1)), UInt32(0), Gtk4.EventType(0), UInt32(0), 1, nothing)
 end
 
 """
@@ -188,11 +188,11 @@ end
 function MouseScroll{U}(e::GtkEventController, direction) where U
     modifiers = Gtk4.G_.get_current_event_state(e)
     evt = Gtk4.G_.get_current_event(e)
-    b, x, y = Gtk4.Gdk4.G_.get_position(evt)
+    b, x, y = Gtk4.G_.get_position(evt)
     MouseScroll{U}(XY{U}(w, x, y), direction, modifiers)
 end
 function MouseScroll{U}() where U
-    MouseScroll(XY(U(-1), U(-1)), UP, Gtk4.Gdk4.ModifierType(0))
+    MouseScroll(XY(U(-1), U(-1)), UP, Gtk4.ModifierType(0))
 end
 
 # immutable KeyEvent
@@ -248,7 +248,7 @@ struct MouseHandler{U<:CairoUnit}
         push!(ids, signal_connect(mousemove_cb, gm, "motion"))
 
         function mousescroll_cb(ec::GtkEventControllerScroll, dx::Float64, dy::Float64)
-            handler.scroll[] = MouseScroll{U}(ec, dx > 0 ? Gtk4.Gdk4.ScrollDirection_UP : Gtk4.Gdk4.ScrollDirection_DOWN)
+            handler.scroll[] = MouseScroll{U}(ec, dx > 0 ? Gtk4.ScrollDirection_UP : Gtk4.ScrollDirection_DOWN)
             nothing
         end
         push!(ids, signal_connect(mousescroll_cb, gs, "scroll"))

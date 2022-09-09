@@ -15,13 +15,13 @@ import Cairo
 
 using Gtk4: GtkWidget
 # Constants for event analysis
-const SHIFT = Gtk4.Gdk4.ModifierType_SHIFT_MASK
-const CONTROL = Gtk4.Gdk4.ModifierType_CONTROL_MASK
-#const MOD1 = Gtk4.Gdk4.ModifierType_MOD1_MASK
-const BUTTON_PRESS = Gtk4.Gdk4.EventType_BUTTON_PRESS
-const BUTTON_RELEASE = Gtk4.Gdk4.EventType_BUTTON_RELEASE
-const MOTION_NOTIFY = Gtk4.Gdk4.EventType_MOTION_NOTIFY
-const UP = Gtk4.Gdk4.ScrollDirection_UP
+const SHIFT = Gtk4.ModifierType_SHIFT_MASK
+const CONTROL = Gtk4.ModifierType_CONTROL_MASK
+#const MOD1 = Gtk4.ModifierType_MOD1_MASK
+const BUTTON_PRESS = Gtk4.EventType_BUTTON_PRESS
+const BUTTON_RELEASE = Gtk4.EventType_BUTTON_RELEASE
+const MOTION_NOTIFY = Gtk4.EventType_MOTION_NOTIFY
+const UP = Gtk4.ScrollDirection_UP
 
 # Re-exports
 export set_coordinates, BoundingBox, SHIFT, CONTROL, MOD1, UP, DOWN, LEFT, RIGHT,
