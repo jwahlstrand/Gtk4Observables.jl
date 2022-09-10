@@ -1,8 +1,5 @@
 # Much of this is event-handling to support interactivity
 
-#using Gtk4.Constants: GDK_KEY_Left, GDK_KEY_Right, GDK_KEY_Up, GDK_KEY_Down
-#using Gtk4.GdkEventMask: KEY_PRESS, SCROLL
-
 abstract type CairoUnit <: Real end
 
 Base.:+(x::U, y::U) where {U<:CairoUnit} = U(x.val + y.val)
@@ -261,7 +258,7 @@ end
     GtkObservables.Canvas{U}(w=-1, h=-1, own=true)
 
 Create a canvas for drawing and interaction. The relevant fields are:
-  - `canvas`: the "raw" Gtk widget (from Gtk.jl)
+  - `canvas`: the "raw" Gtk widget (from Gtk4.jl)
   - `mouse`: the [`MouseHandler{U}`](@ref) for this canvas.
 
 See also [`canvas`](@ref).

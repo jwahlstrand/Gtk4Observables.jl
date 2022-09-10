@@ -39,7 +39,6 @@ function init_zoom_rubberband(canvas::Canvas{U},
     init = on(canvas.mouse.buttonpress; weak=true) do btn::MouseButton{U}
         if enabled[]
             if initiate(btn)
-                println("starting rubberband")
                 active[] = true
                 ctxcopy[] = copy(getgc(canvas))
                 rb.pos1 = rb.pos2 = btn.position
@@ -53,7 +52,6 @@ function init_zoom_rubberband(canvas::Canvas{U},
     drag = on(canvas.mouse.motion; weak=true) do btn::MouseButton{U}
         if active[]
             btn.button == 0 && return nothing
-            println("dragging")
             rubberband_move(canvas, rb, btn, ctxcopy[])
         end
     end
