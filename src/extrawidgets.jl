@@ -46,14 +46,14 @@ frame(p::PlayerWithTextbox) = p.frame
 function PlayerWithTextbox(builder, index::Observable{Int}, range::UnitRange{Int}, id::Int=1)
     1 <= id <= 2 || error("only 2 player widgets are defined in player.ui")
     direction = Observable(Int8(0))
-    frame = Gtk4.G_.get_object(builder,"player_frame$id")::Gtk4.GtkFrame
-    scale = slider(range; widget=Gtk4.G_.get_object(builder,"index_scale$id")::Gtk4.GtkScale, observable=index)
-    entry = textbox(first(range); widget=Gtk4.G_.get_object(builder,"index_entry$id")::Gtk4.GtkEntry, observable=index, range=range)
-    play_back = button(; widget=Gtk4.G_.get_object(builder,"play_back$id")::Gtk4.GtkButton)
-    step_back = button(; widget=Gtk4.G_.get_object(builder,"step_back$id")::Gtk4.GtkButton)
-    stop = button(; widget=Gtk4.G_.get_object(builder,"stop$id")::Gtk4.GtkButton)
-    step_forward = button(; widget=Gtk4.G_.get_object(builder,"step_forward$id")::Gtk4.GtkButton)
-    play_forward = button(; widget=Gtk4.G_.get_object(builder,"play_forward$id")::Gtk4.GtkButton)
+    frame = builder["player_frame$id"]::Gtk4.GtkFrame
+    scale = slider(range; widget=builder["index_scale$id"]::Gtk4.GtkScale, observable=index)
+    entry = textbox(first(range); widget=builder["index_entry$id"]::Gtk4.GtkEntry, observable=index, range=range)
+    play_back = button(; widget=builder["play_back$id"]::Gtk4.GtkButton)
+    step_back = button(; widget=builder["step_back$id"]::Gtk4.GtkButton)
+    stop = button(; widget=builder["stop$id"]::Gtk4.GtkButton)
+    step_forward = button(; widget=builder["step_forward$id"]::Gtk4.GtkButton)
+    play_forward = button(; widget=builder["play_forward$id"]::Gtk4.GtkButton)
 
     # Fix up widget properties
     set_gtk_property!(scale.widget, "round-digits", 0)  # glade/gtkbuilder bug that I have to set this here?

@@ -65,8 +65,8 @@ end
 init_observable2widget(widget::GtkWidget, id, observable) =
     init_observable2widget(defaultgetter, defaultsetter!, widget, id, observable)
 
-defaultgetter(widget) = Gtk4.G_.get_value(widget)
-defaultsetter!(widget,val) = Gtk4.G_.set_value(widget, val)
+defaultgetter(widget) = Gtk4.value(widget)
+defaultsetter!(widget,val) = Gtk4.value(widget, val)
 
 """
     ondestroy(widget::GtkWidget, preserved)
@@ -129,11 +129,11 @@ function slider(range::AbstractRange{T};
         Gtk4.G_.set_size_request(widget, 200, -1)
     else
         adj = Gtk4.GtkAdjustment(widget)
-        Gtk4.G_.set_lower(adj, first(range))
-        Gtk4.G_.set_upper(adj, last(range))
-        Gtk4.G_.set_step_increment(adj, step(range))
+        Gtk4.lower(adj, first(range))
+        Gtk4.upper(adj, last(range))
+        Gtk4.step_increment(adj, step(range))
     end
-    Gtk4.G_.set_value(widget, value)
+    Gtk4.value(widget, value)
 
     ## widget -> observable
     id = signal_connect(widget, "value_changed") do w
@@ -157,10 +157,10 @@ end
 function Base.setindex!(s::Slider, (range,value)::Tuple{AbstractRange, Any})
     first(range) <= value <= last(range) || error("$value is not within the span of $range")
     adj = Gtk4.GtkAdjustment(widget(s))
-    Gtk4.G_.set_lower(adj, first(range))
-    Gtk4.G_.set_upper(adj, last(range))
-    Gtk4.G_.set_step_increment(adj, step(range))
-    Gtk4.@idle_add Gtk4.G_.set_value(widget(s), value)
+    Gtk4.lower(adj, first(range))
+    Gtk4.upper(adj, last(range))
+    Gtk4.step_increment(adj, step(range))
+    Gtk4.@idle_add Gtk4.value(widget(s), value)
 end
 Base.setindex!(s::Slider, range::AbstractRange) = setindex!(s, (range, s[]))
 
@@ -199,14 +199,14 @@ function checkbox(value::Bool; widget=nothing, observable=nothing, label="", own
     if widget === nothing
         widget = GtkCheckButton(label)
     end
-    Gtk4.G_.set_active(widget, value)
+    Gtk4.active(widget, value)
 
     id = signal_connect(widget, "toggled") do w
-        observable[] = Gtk4.G_.get_active(w)
+        observable[] = Gtk4.active(w)
     end
     preserved = []
-    push!(preserved, init_observable2widget(w->Gtk4.G_.get_active(w),
-                                            (w,val)->Gtk4.G_.set_active(w, val),
+    push!(preserved, init_observable2widget(w->Gtk4.active(w),
+                                            (w,val)->Gtk4.active(w, val),
                                             widget, id, observable))
     if own
         ondestroy(widget, preserved)
@@ -252,14 +252,14 @@ function togglebutton(value::Bool; widget=nothing, observable=nothing, label="",
     if widget === nothing
         widget = GtkToggleButton(label)
     end
-    Gtk4.G_.set_active(widget, value)
+    Gtk4.active(widget, value)
 
     id = signal_connect(widget, "toggled") do w
-    setindex!(observable, Gtk4.G_.active(w))
+    setindex!(observable, Gtk4.active(w))
     end
     preserved = []
-    push!(preserved, init_observable2widget(w->Gtk4.G_.get_active(w),
-                                        (w,val)->Gtk4.G_.set_active(w, val),
+    push!(preserved, init_observable2widget(w->Gtk4.active(w),
+                                        (w,val)->Gtk4.active(w, val),
                                         widget, id, observable))
     if own
         ondestroy(widget, preserved)
@@ -609,7 +609,7 @@ function dropdown(; choices=nothing,
     allstrings = all(x->isa(x, AbstractString), choices)
     allstrings || all(x->isa(x, Pair), choices) || throw(ArgumentError("all elements must either be strings or pairs, got $choices"))
     str2int = Dict{String,Int}()
-    getactive(w) = Gtk4.G_.get_active_text(w)
+    getactive(w) = Gtk4.active_text(w)
     setactive!(w, val) = (i = val !== nothing ? str2int[val] : -1; set_gtk_property!(w, :active, i))
     if length(choices) > 0
         if value === nothing || (observable isa Observable{String} && value ∉ juststring.(choices))
@@ -916,15 +916,15 @@ function spinbutton(range::AbstractRange{T};
         Gtk4.G_.set_size_request(widget, 200, -1)
     else
         adj = Gtk4.GtkAdjustment(widget)
-        Gtk4.G_.set_lower(adj, first(range))
-        Gtk4.G_.set_upper(adj, last(range))
-        Gtk4.G_.set_step_increment(adj, step(range))
+        Gtk4.lower(adj, first(range))
+        Gtk4.upper(adj, last(range))
+        Gtk4.step_increment(adj, step(range))
     end
     if lowercase(first(orientation)) == 'v'
-        Gtk4.G_.set_orientation(Gtk4.GtkOrientable(widget),
+        Gtk4.orientation(Gtk4.GtkOrientable(widget),
                            Gtk4.Orientation_VERTICAL)
     end
-    Gtk4.G_.set_value(widget, value)
+    Gtk4.value(widget, value)
 
     ## widget -> observable
     id = signal_connect(widget, "value_changed") do w
@@ -948,10 +948,10 @@ end
 function Base.setindex!(s::SpinButton, (range,value)::Tuple{AbstractRange,Any})
     first(range) <= value <= last(range) || error("$value is not within the span of $range")
     adj = Gtk4.GtkAdjustment(widget(s))
-    Gtk4.G_.set_lower(adj, first(range))
-    Gtk4.G_.set_upper(adj, last(range))
-    Gtk4.G_.set_step_increment(adj, step(range))
-    Gtk4.G_.set_value(widget(s), value)
+    Gtk4.lower(adj, first(range))
+    Gtk4.upper(adj, last(range))
+    Gtk4.step_increment(adj, step(range))
+    Gtk4.value(widget(s), value)
 end
 Base.setindex!(s::SpinButton, range::AbstractRange) = setindex!(s, (range, s[]))
 
@@ -1004,15 +1004,15 @@ function cyclicspinbutton(range::AbstractRange{T}, carry_up::Observable{Bool};
         Gtk4.G_.set_size_request(widget, 200, -1)
     else
         adj = Gtk4.GtkAdjustment(widget)
-        Gtk4.G_.set_lower(adj, first(range) - step(range))
-        Gtk4.G_.set_upper(adj, last(range) + step(range))
-        Gtk4.G_.set_step_increment(adj, step(range))
+        Gtk4.lower(adj, first(range) - step(range))
+        Gtk4.upper(adj, last(range) + step(range))
+        Gtk4.step_increment(adj, step(range))
     end
     if lowercase(first(orientation)) == 'v'
-        Gtk4.G_.set_orientation(Gtk4.GtkOrientable(widget),
+        Gtk4.orientation(Gtk4.GtkOrientable(widget),
                            Gtk4.Orientation_VERTICAL)
     end
-    Gtk4.G_.set_value(widget, value)
+    Gtk4.value(widget, value)
 
     ## widget -> observable
     id = signal_connect(widget, "value_changed") do w

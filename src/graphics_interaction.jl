@@ -141,14 +141,14 @@ function MouseButton(pos::XY{U}, button::Integer, clicktype, modifiers, n_press=
     MouseButton{U}(pos, UInt32(button), clicktype, UInt32(modifiers), n_press, gtkevent)
 end
 function MouseButton{U}(e::GtkGestureSingle, n_press::Int32, x::Float64, y::Float64, clicktype) where U
-    button = Gtk4.G_.get_button(e)
-    modifiers = Gtk4.G_.get_current_event_state(e)
+    button = Gtk4.button(e)
+    modifiers = Gtk4.current_event_state(e)
     w = widget(e)
-    #evt = Gtk4.G_.get_current_event(e)
+    #evt = Gtk4.current_event(e)
     MouseButton{U}(XY{U}(w, x, y), button, clicktype, UInt32(modifiers), n_press, nothing)
 end
 function MouseButton{U}(e::GtkEventController, n_press::Integer, x::Float64, y::Float64, clicktype) where U
-    modifiers = Gtk4.G_.get_current_event_state(e)
+    modifiers = Gtk4.current_event_state(e)
     button = 0
     if modifiers != 0 && (modifiers & Gtk4.ModifierType_BUTTON1_MASK == Gtk4.ModifierType_BUTTON1_MASK)
         button = 1
@@ -186,9 +186,9 @@ function MouseScroll(pos::XY{U}, direction, modifiers) where U
     MouseScroll{U}(pos, direction, modifiers)
 end
 function MouseScroll{U}(e::GtkEventController, direction) where U
-    modifiers = Gtk4.G_.get_current_event_state(e)
-    evt = Gtk4.G_.get_current_event(e)
-    b, x, y = Gtk4.G_.get_position(evt)
+    modifiers = Gtk4.current_event_state(e)
+    evt = Gtk4.current_event(e)
+    b, x, y = Gtk4.position(evt)
     MouseScroll{U}(XY{U}(w, x, y), direction, modifiers)
 end
 function MouseScroll{U}() where U
