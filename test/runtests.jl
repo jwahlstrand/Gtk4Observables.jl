@@ -8,6 +8,8 @@ using GtkObservables, Gtk4, Gtk4.G_, IntervalSets, Graphics, Colors,
       IdentityRanges
 using Test
 
+Gtk4.GLib.start_main_loop()
+
 include("tools.jl")
 
 @testset "Widgets" begin
@@ -354,9 +356,9 @@ end
     win = GtkWindow(c)
     reveal(c)
     sleep(0.3)
-    can_test_width = !(VERSION.minor < 3 && Sys.iswindows())
+    can_test_width = !Sys.iswindows()
     can_test_width && @test Graphics.width(c) == 208
-    @test Graphics.height(c) == 207
+    can_test_width && @test Graphics.height(c) == 207
     @test isa(c, GtkObservables.Canvas{DeviceUnit})
     Gtk4.destroy(win)
     c = canvas(UserUnit, 208, 207)
@@ -366,16 +368,12 @@ end
     @test isa(c, GtkObservables.Canvas{UserUnit})
     @test string(c) == "GtkObservables.Canvas{UserUnit}()"
     corner_dev = (DeviceUnit(208), DeviceUnit(207))
-    can_test_coords = (VERSION < v"1.3" || get(ENV, "CI", nothing) != "true" || !Sys.islinux()) &&
-                      can_test_width
+    can_test_coords = (get(ENV, "CI", nothing) != "true" || !Sys.islinux()) && can_test_width
     for (coords, corner_usr) in ((BoundingBox(0, 1, 0, 1), (UserUnit(1), UserUnit(1))),
                                  (ZoomRegion((5:10, 3:5)), (UserUnit(5), UserUnit(10))),
                                  ((-1:1, 101:110), (UserUnit(110), UserUnit(1))))
         set_coordinates(c, coords)
         if can_test_coords
-            # FIXME: the new JLL-based version fails on Travis.
-            # Unfortunately this is difficult to debug because it doesn't replicate
-            # locally or on a local headless server. See #91.
             @test GtkObservables.convertunits(DeviceUnit, c, corner_dev...) == corner_dev
             @test GtkObservables.convertunits(DeviceUnit, c, corner_usr...) == corner_dev
             @test GtkObservables.convertunits(UserUnit, c, corner_dev...) == corner_usr
@@ -397,6 +395,25 @@ end
     @test get_gtk_property(f, "ratio", Float64) == 3.0
 end
 
+function gesture_click_button_1(g)
+    isa(g,GtkGestureClick) && g.button == 1
+end
+function gesture_click_button_3(g)
+    isa(g,GtkGestureClick) && g.button == 3
+end
+
+function find_gesture_click_button_1(w::GtkWidget)
+    list = Gtk4.GLib.GListModel(Gtk4.G_.observe_controllers(w))
+    i=findfirst(gesture_click_button_1, list)
+    i!==nothing ? list[i] : nothing
+end
+
+function find_gesture_click_button_3(w::GtkWidget)
+    list = Gtk4.GLib.GListModel(Gtk4.G_.observe_controllers(w))
+    i=findfirst(gesture_click_button_3, list)
+    i!==nothing ? list[i] : nothing
+end
+
 @testset "Canvas events" begin
     win = GtkWindow()
     c = canvas(UserUnit)
@@ -410,7 +427,7 @@ end
     scroll  = map(btn->lastevent[] = "scroll", c.mouse.scroll)
     lastevent[] = "nothing"
     @test lastevent[] == "nothing"
-    ec = Gtk4.find_controller(widget(c), GtkGestureClick)
+    ec = find_gesture_click_button_1(widget(c))
     signal_emit(ec, "pressed", Nothing, Int32(1), 0.0, 0.0)
     sleep(0.1)
     @test lastevent[] == "press"
@@ -443,7 +460,7 @@ end
     win[] = widget(c)
     popuptriggered = Ref(false)
     push!(c.preserved, map(c.mouse.buttonpress) do btn
-        @async println(btn.button)
+        @async println("button is $(btn.button)")
         if btn.button == 3 && btn.clicktype == BUTTON_PRESS
             pos = Gtk4._GdkRectangle(round(Int32,btn.position.x.val),round(Int32,btn.position.y.val),1,1)
             Gtk4.G_.set_pointing_to(popover, Ref(pos))
@@ -454,15 +471,13 @@ end
     end)
     yield()
     @test !popuptriggered[]
-#     FIXME: Haven't figured out how to do this in GTK4
-#
-#     evt = eventbutton(c, BUTTON_PRESS, 1)
-#     signal_emit(widget(c), "button-press-event", Bool, evt)
-#     yield()
-#     @test !popuptriggered[]
-#     evt = eventbutton(c, BUTTON_PRESS, 3)
-#     signal_emit(widget(c), "button-press-event", Bool, evt)
-#     @test popuptriggered[]
+    ec = find_gesture_click_button_1(widget(c))
+    signal_emit(ec, "pressed", Nothing, Int32(1), 0.0, 0.0)
+    yield()
+    @test !popuptriggered[]
+    ec = find_gesture_click_button_3(widget(c))
+    signal_emit(ec, "pressed", Nothing, Int32(1), 0.0, 0.0)
+    @test popuptriggered[]
     Gtk4.destroy(win)
 end
 
@@ -482,7 +497,7 @@ end
     xsig[] = 100
     sleep(1)
     # Check that the displayed image is as expected
-    if get(ENV, "CI", nothing) != "true" || !Sys.islinux() || VERSION < v"1.3" # broken on Travis
+    if get(ENV, "CI", nothing) != "true" || !Sys.islinux()
         fn = joinpath(tempdir(), "circled.png")
         Cairo.write_to_png(getgc(c).surface, fn)
         imgout = load(fn)
@@ -617,7 +632,7 @@ end
     # @test zr[].currentview.x == 5..10
     # @test zr[].currentview.y == 3..4
     # # Ensure that the rubber band damage has been repaired
-    # if get(ENV, "CI", nothing) != "true" || !Sys.islinux() || VERSION < v"1.3" # broken on Travis
+    # if get(ENV, "CI", nothing) != "true" || !Sys.islinux()
     #     fn = tempname()
     #     Cairo.write_to_png(getgc(c).surface, fn)
     #     imgout = load(fn)

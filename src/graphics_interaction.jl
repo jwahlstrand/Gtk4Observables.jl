@@ -223,7 +223,8 @@ struct MouseHandler{U<:CairoUnit}
         ids = Vector{Culong}(undef, 0)
         handler = new{U}(Observable(btn), Observable(btn), Observable(btn), Observable(scroll), ids, canvas)
         # Create the callbacks
-        g = GtkGestureClick(canvas)
+        g = GtkGestureClick(canvas,1)
+        g3 = GtkGestureClick(canvas,3)
         gm = GtkEventControllerMotion(canvas)
         gs = GtkEventControllerScroll(Gtk4.EventControllerScrollFlags_VERTICAL, canvas)
 

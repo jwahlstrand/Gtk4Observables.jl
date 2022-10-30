@@ -1,17 +1,4 @@
 # Simulate user inputs
-function eventbutton(c, event_type, btn, x=DeviceUnit(0), y=DeviceUnit(0), state=0)
-    xd, yd = GtkObservables.convertunits(DeviceUnit, c, x, y)
-    Gtk.GdkEventButton(event_type,
-                       Gtk.gdk_window(widget(c)),
-                       Int8(0),
-                       UInt32(0),
-                       convert(Float64, xd), convert(Float64, yd),
-                       convert(Ptr{Float64},C_NULL),
-                       UInt32(state),
-                       UInt32(btn),
-                       C_NULL,
-                       0.0, 0.0)
-end
 function eventscroll(c, direction, x=DeviceUnit(0), y=DeviceUnit(0), state=0)
     xd, yd = GtkObservables.convertunits(DeviceUnit, c, x, y)
     Gtk.GdkEventScroll(Gtk.GdkEventType.SCROLL,
@@ -23,19 +10,6 @@ function eventscroll(c, direction, x=DeviceUnit(0), y=DeviceUnit(0), state=0)
                        direction,
                        convert(Ptr{Float64},C_NULL),
                        0.0, 0.0,
-                       0.0, 0.0)
-end
-function eventmotion(c, btn, x, y)
-    xd, yd = GtkObservables.convertunits(DeviceUnit, c, x, y)
-    Gtk.GdkEventMotion(Gtk.GdkEventType.MOTION_NOTIFY,
-                       Gtk.gdk_window(widget(c)),
-                       Int8(0),
-                       UInt32(0),
-                       convert(Float64, xd), convert(Float64, yd),
-                       convert(Ptr{Float64},C_NULL),
-                       UInt32(btn),
-                       Int16(0),
-                       C_NULL,
                        0.0, 0.0)
 end
 

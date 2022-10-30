@@ -157,10 +157,7 @@ end
 function Base.setindex!(s::Slider, (range,value)::Tuple{AbstractRange, Any})
     first(range) <= value <= last(range) || error("$value is not within the span of $range")
     adj = Gtk4.GtkAdjustment(widget(s))
-    Gtk4.lower(adj, first(range))
-    Gtk4.upper(adj, last(range))
-    Gtk4.step_increment(adj, step(range))
-    Gtk4.@idle_add Gtk4.value(widget(s), value)
+    Gtk4.configure(adj; value = value, lower = first(range), upper = last(range), step_increment = step(range))
 end
 Base.setindex!(s::Slider, range::AbstractRange) = setindex!(s, (range, s[]))
 
