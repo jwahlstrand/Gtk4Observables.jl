@@ -2,17 +2,17 @@
 
 Let's create a `slider` object:
 ```jldoctest demo1
-julia> using Gtk.ShortNames, GtkObservables
+julia> using Gtk.ShortNames, Gtk4Observables
 
 julia> sl = slider(1:11)
 Gtk.GtkScaleLeaf with Observable{Int64} with 1 listeners. Value:
 6
 
 julia> typeof(sl)
-GtkObservables.Slider{Int64}
+Gtk4Observables.Slider{Int64}
 ```
 
-A `GtkObservables.Slider` holds two important objects: an `Observable`
+A `Gtk4Observables.Slider` holds two important objects: an `Observable`
 (encoding the "state" of the widget) and a `GtkWidget` (which controls
 the on-screen display). We can extract both of these components:
 

@@ -1,6 +1,6 @@
 # A simple drawing program
 
-Aside from widgets, GtkObservables also adds canvas interactions,
+Aside from widgets, Gtk4Observables also adds canvas interactions,
 specifically handling of mouse clicks and scroll events. We can
 explore some of these tools by building a simple program for drawing
 lines.
@@ -8,9 +8,9 @@ lines.
 Let's begin by creating a window with a canvas in it:
 
 ```julia
-using GtkObservables, Colors
-using GtkObservables.Gtk
-using GtkObservables.Gtk.ShortNames
+using Gtk4Observables, Colors
+using Gtk4Observables.Gtk
+using Gtk4Observables.Gtk.ShortNames
 
 win = Window("Drawing")
 c = canvas(UserUnit)       # create a canvas with user-specified coordinates
@@ -43,7 +43,7 @@ const newline = Observable([]) # the in-progress line (will be added to list abo
 ```
 
 Now, let's make our application respond to mouse-clicks. An important
-detail about a `GtkObservables.Canvas` object is that it contains a
+detail about a `Gtk4Observables.Canvas` object is that it contains a
 [`MouseHandler`](@ref), accessible with `c.mouse`; this object
 contains `Observables.Observable` objects for mouse button press/release
 events, mouse movements, and scrolling:
@@ -72,7 +72,7 @@ end
 
 We assigned the output of `on` to a variable to prevent it from being
 garbage-collected.
-(We could use `GtkObservables.gc_preserve(win, sigstart)` if we wanted
+(We could use `Gtk4Observables.gc_preserve(win, sigstart)` if we wanted
 to keep it alive for at least as long as `win` is active.)
 
 Once the user clicks the button, `drawing` holds value `true`; from
@@ -148,7 +148,7 @@ end
 ```
 
 **Important note:** Only modify the canvas inside the `draw` function, and pass
-all observables that you want to consume as additional arguments (the example shows 
+all observables that you want to consume as additional arguments (the example shows
 three, but you may pass as few or as many as you wish). Otherwise, you
 may find the rendering behaves unexpectedly.
 

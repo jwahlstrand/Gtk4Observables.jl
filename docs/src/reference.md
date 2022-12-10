@@ -23,13 +23,13 @@ label
 
 ```@docs
 canvas
-GtkObservables.Canvas
-GtkObservables.MouseHandler
+Gtk4Observables.Canvas
+Gtk4Observables.MouseHandler
 DeviceUnit
 UserUnit
-GtkObservables.XY
-GtkObservables.MouseButton
-GtkObservables.MouseScroll
+Gtk4Observables.XY
+Gtk4Observables.MouseButton
+Gtk4Observables.MouseScroll
 ```
 
 ## Pan/zoom
@@ -62,5 +62,5 @@ init_pan_scroll
 ```@docs
 observable
 frame
-GtkObservables.gc_preserve
+Gtk4Observables.gc_preserve
 ```
