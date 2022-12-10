@@ -1,8 +1,8 @@
-using Gtk.ShortNames, GtkObservables, Graphics, Colors
+using Gtk4, Gtk4Observables, Graphics, Colors, Observables
 
-win = Window("Drawing")
+win = GtkWindow("Drawing")
 c = canvas(UserUnit)       # create a canvas with user-specified coordinates
-push!(win, c)
+push!(win, c.widget)
 
 const lines = Observable([])   # the list of lines that we'll draw
 const newline = Observable([]) # the in-progress line (will be added to list above)
@@ -10,7 +10,7 @@ const newline = Observable([]) # the in-progress line (will be added to list abo
 # Add mouse interactions
 const drawing = Observable(false)  # this will be true if we're dragging a new line
 sigstart = on(c.mouse.buttonpress) do btn
-    if btn.button == 1 && btn.modifiers == 0
+    if btn.button == 1 #&& btn.modifiers == 0
         drawing[] = true   # start extending the line
         newline[] = [btn.position]
     end
@@ -33,18 +33,10 @@ sigend = on(c.mouse.buttonrelease) do btn
     end
 end
 
-# Draw on the canvas
-redraw = draw(c, lines, newline) do cnvs, lns, newl
-    fill!(cnvs, colorant"white")   # background is white
-    set_coordinates(cnvs, BoundingBox(0, 1, 0, 1))  # set coords to 0..1 along each axis
-    ctx = getgc(cnvs)
-    for l in lns
-        drawline(ctx, l, colorant"blue")
-    end
-    drawline(ctx, newl, colorant"red")
-end
+sleep(1.0)
 
 function drawline(ctx, l, color)
+    #@async println("drawline")
     isempty(l) && return
     p = first(l)
     move_to(ctx, p.x, p.y)
@@ -56,4 +48,14 @@ function drawline(ctx, l, color)
     stroke(ctx)
 end
 
-Gtk.showall(win)
+# Draw on the canvas
+redraw = @guarded draw(c, lines, newline) do cnvs, lns, newl
+    fill!(cnvs, colorant"white")   # background is white
+    set_coordinates(cnvs, BoundingBox(0, 1, 0, 1))  # set coords to 0..1 along each axis
+    ctx = getgc(cnvs)
+    #@async println(isempty(newl))
+    for l in lns
+        drawline(ctx, l, colorant"blue")
+    end
+    drawline(ctx, newl, colorant"red")
+end
