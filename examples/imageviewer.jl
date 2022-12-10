@@ -1,4 +1,4 @@
-using TestImages, GtkObservables, Gtk4, Observables
+using TestImages, Gtk4Observables, Gtk4, Observables
 
 img = testimage("lighthouse")
 

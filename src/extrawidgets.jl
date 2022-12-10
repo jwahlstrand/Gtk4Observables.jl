@@ -161,7 +161,7 @@ function timewidget(t1::Dates.Time; widget=nothing, observable=nothing)
     end
     t2 = map(last, H) # here is the final time
     connect_nofire!(observable, t2) # we connect the input and output times so that any update to the resulting time will go into the input observable and actually show on the widgets
-    Sint = Observable(Dates.value(first(S[]))) # necessary for now, until range-like GtkObservables.widgets can accept other ranges.
+    Sint = Observable(Dates.value(first(S[]))) # necessary for now, until range-like Gtk4Observables.widgets can accept other ranges.
     Ssb = spinbutton(-1:60, widget=b["second"], observable=Sint) # allow for values outside the actual range of seconds so that we'll be able to increase and decrease minutes.
     on(Sint; weak=true) do x
         Δ = Dates.Second(x) - first(S[]) # how much did we change by, this should always be ±1

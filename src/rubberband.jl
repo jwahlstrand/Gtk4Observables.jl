@@ -1,5 +1,5 @@
 """
-    signals = init_zoom_rubberband(canvas::GtkObservables.Canvas,
+    signals = init_zoom_rubberband(canvas::Gtk4Observables.Canvas,
                                    zr::Observable{ZoomRegion},
                                    initiate = btn->(btn.button == 1 && btn.clicktype == BUTTON_PRESS && btn.modifiers == CONTROL),
                                    reset = btn->(btn.button == 1 && btn.clicktype == DOUBLE_BUTTON_PRESS && btn.modifiers == CONTROL),
@@ -44,7 +44,7 @@ function init_zoom_rubberband(canvas::Canvas{U},
                 rb.pos1 = rb.pos2 = btn.position
             elseif reset(btn)
                 active[] = false  # double-clicks need to cancel the previous single-click
-                zr[] = GtkObservables.reset(zr[])
+                zr[] = Gtk4Observables.reset(zr[])
             end
         end
         nothing
@@ -132,7 +132,7 @@ function rubberband_move(c::Canvas, rb::RubberBand, btn, ctxcopy)
     nothing
 end
 
-function rubberband_stop(c::GtkObservables.Canvas, rb::RubberBand, btn, ctxcopy, callback_done)
+function rubberband_stop(c::Gtk4Observables.Canvas, rb::RubberBand, btn, ctxcopy, callback_done)
     if !rb.moved
         return nothing
     end

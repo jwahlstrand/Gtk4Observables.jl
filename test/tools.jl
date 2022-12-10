@@ -1,6 +1,6 @@
 # Simulate user inputs
 function eventscroll(c, direction, x=DeviceUnit(0), y=DeviceUnit(0), state=0)
-    xd, yd = GtkObservables.convertunits(DeviceUnit, c, x, y)
+    xd, yd = Gtk4Observables.convertunits(DeviceUnit, c, x, y)
     Gtk.GdkEventScroll(Gtk.GdkEventType.SCROLL,
                        Gtk.gdk_window(widget(c)),
                        Int8(0),

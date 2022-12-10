@@ -1,4 +1,4 @@
-module GtkObservables
+module Gtk4Observables
 
 if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@compiler_options"))
     @eval Base.Experimental.@compiler_options optimize=1

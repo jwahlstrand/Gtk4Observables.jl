@@ -1068,7 +1068,7 @@ Create a progressbar displaying the current state in the given interval. Optiona
   - the (Observables.jl) `observable` coupled to this progressbar (by default, creates a new observable)
 # Examples
 ```julia-repl
-julia> using GtkObservables
+julia> using Gtk4Observables
 julia> using IntervalSets
 julia> n = 10
 julia> pb = progressbar(1..n)

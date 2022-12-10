@@ -1,4 +1,4 @@
-using GtkObservables, Gtk4, Colors
+using Gtk4Observables, Gtk4, Colors
 
 # Create some controls
 n = slider(1:10)
@@ -20,7 +20,7 @@ end
 # Lay out the GUI. You can alternatively use `glade` and pass the
 # widgets to the constructors above (see the implementation of
 # `player` in `extrawidgets.jl` for an example).
-mainwin = GtkWindow("GtkObservables")
+mainwin = GtkWindow("Gtk4Observables")
 vbox = GtkBox(:v)
 hbox = GtkBox(:h)
 push!(vbox, hbox)

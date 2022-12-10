@@ -1,4 +1,4 @@
-using Gtk4, GtkObservables, Graphics, Colors, Observables
+using Gtk4, Gtk4Observables, Graphics, Colors, Observables
 
 win = GtkWindow("Drawing")
 c = canvas(UserUnit)       # create a canvas with user-specified coordinates

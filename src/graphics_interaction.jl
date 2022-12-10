@@ -256,7 +256,7 @@ struct MouseHandler{U<:CairoUnit}
 end
 
 """
-    GtkObservables.Canvas{U}(w=-1, h=-1, own=true)
+    Gtk4Observables.Canvas{U}(w=-1, h=-1, own=true)
 
 Create a canvas for drawing and interaction. The relevant fields are:
   - `canvas`: the "raw" Gtk widget (from Gtk4.jl)
@@ -282,21 +282,21 @@ struct Canvas{U}
 end
 Canvas{U}(w::Integer, h::Integer=-1; own::Bool=true) where U = Canvas{U}(Int(w)::Int, Int(h)::Int; own=own)
 
-Base.show(io::IO, canvas::Canvas{U}) where U = print(io, "GtkObservables.Canvas{$U}()")
+Base.show(io::IO, canvas::Canvas{U}) where U = print(io, "Gtk4Observables.Canvas{$U}()")
 
 """
-    canvas(U=DeviceUnit, w=-1, h=-1) - c::GtkObservables.Canvas
+    canvas(U=DeviceUnit, w=-1, h=-1) - c::Gtk4Observables.Canvas
 
 Create a canvas for drawing and interaction. Optionally specify the
 width `w` and height `h`. `U` refers to the units for the canvas (for
 both drawing and reporting mouse pointer positions), see
-[`DeviceUnit`](@ref) and [`UserUnit`](@ref). See also [`GtkObservables.Canvas`](@ref).
+[`DeviceUnit`](@ref) and [`UserUnit`](@ref). See also [`Gtk4Observables.Canvas`](@ref).
 """
 canvas(::Type{U}=DeviceUnit, w::Integer=-1, h::Integer=-1) where {U<:CairoUnit} = Canvas{U}(w, h)
 canvas(w::Integer, h::Integer) = canvas(DeviceUnit, w, h)
 
 """
-    draw(f, c::GtkObservables.Canvas, signals...)
+    draw(f, c::Gtk4Observables.Canvas, signals...)
 
 Supply a draw function `f` for `c`. This will be called whenever the
 canvas is resized or whenever any of the input `signals` update. `f`
@@ -505,7 +505,7 @@ function zoom(zr::ZoomRegion, s)
 end
 
 """
-    signals = init_pan_scroll(canvas::GtkObservables.Canvas,
+    signals = init_pan_scroll(canvas::Gtk4Observables.Canvas,
                               zr::Observable{ZoomRegion},
                               filter_x::Function = evt->evt.modifiers == SHIFT || event.direction == LEFT || event.direction == RIGHT,
                               filter_y::Function = evt->evt.modifiers == 0 || event.direction == UP || event.direction == DOWN,
@@ -552,7 +552,7 @@ function init_pan_scroll(canvas::Canvas{U},
 end
 
 """
-    signals = init_pan_drag(canvas::GtkObservables.Canvas,
+    signals = init_pan_drag(canvas::Gtk4Observables.Canvas,
                             zr::Observable{ZoomRegion},
                             initiate = btn->(btn.button == 1 && btn.clicktype == BUTTON_PRESS && btn.modifiers == 0))
 
@@ -610,7 +610,7 @@ pandrag_button(btn) = btn.button == 1 && (btn.modifiers & 0x0f) == 0
 pandrag_init_default(btn) = btn.clicktype == BUTTON_PRESS && pandrag_button(btn)
 
 """
-    signals = init_zoom_scroll(canvas::GtkObservables.Canvas,
+    signals = init_zoom_scroll(canvas::Gtk4Observables.Canvas,
                                zr::Observable{ZoomRegion},
                                filter::Function = evt->evt.modifiers == CONTROL,
                                focus::Symbol = :pointer,
