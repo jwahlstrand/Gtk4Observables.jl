@@ -355,7 +355,7 @@ end
     c = canvas(208, 207)
     win = GtkWindow(c)
     reveal(c)
-    sleep(0.3)
+    sleep(1.0)
     can_test_width = !Sys.iswindows()
     can_test_width && @test Graphics.width(c) == 208
     can_test_width && @test Graphics.height(c) == 207
