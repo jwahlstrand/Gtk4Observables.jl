@@ -129,9 +129,7 @@ function slider(range::AbstractRange{T};
         Gtk4.G_.set_size_request(widget, 200, -1)
     else
         adj = Gtk4.GtkAdjustment(widget)
-        Gtk4.lower(adj, first(range))
-        Gtk4.upper(adj, last(range))
-        Gtk4.step_increment(adj, step(range))
+        Gtk4.configure!(adj; lower = first(range), upper = last(range), step_increment = step(range))
     end
     Gtk4.value(widget, value)
 
@@ -780,9 +778,7 @@ function spinbutton(range::AbstractRange{T};
         Gtk4.G_.set_size_request(widget, 200, -1)
     else
         adj = Gtk4.GtkAdjustment(widget)
-        Gtk4.lower(adj, first(range))
-        Gtk4.upper(adj, last(range))
-        Gtk4.step_increment(adj, step(range))
+        Gtk4.configure!(adj; lower=first(range), upper=last(range), step_increment=step(range))
     end
     if lowercase(first(orientation)) == 'v'
         Gtk4.orientation(Gtk4.GtkOrientable(widget),
@@ -812,10 +808,7 @@ end
 function Base.setindex!(s::SpinButton, (range,value)::Tuple{AbstractRange,Any})
     first(range) <= value <= last(range) || error("$value is not within the span of $range")
     adj = Gtk4.GtkAdjustment(widget(s))
-    Gtk4.lower(adj, first(range))
-    Gtk4.upper(adj, last(range))
-    Gtk4.step_increment(adj, step(range))
-    Gtk4.value(widget(s), value)
+    Gtk4.configure!(adj; value = value, lower = first(range), upper = last(range), step_increment = step(range))
 end
 Base.setindex!(s::SpinButton, range::AbstractRange) = setindex!(s, (range, s[]))
 
@@ -868,9 +861,7 @@ function cyclicspinbutton(range::AbstractRange{T}, carry_up::Observable{Bool};
         Gtk4.G_.set_size_request(widget, 200, -1)
     else
         adj = Gtk4.GtkAdjustment(widget)
-        Gtk4.lower(adj, first(range) - step(range))
-        Gtk4.upper(adj, last(range) + step(range))
-        Gtk4.step_increment(adj, step(range))
+        Gtk4.configure!(adj; lower = first(range) - step(range), upper = last(range) + step(range), step_increment = step(range))
     end
     if lowercase(first(orientation)) == 'v'
         Gtk4.orientation(Gtk4.GtkOrientable(widget),
